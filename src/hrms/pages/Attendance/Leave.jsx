@@ -147,12 +147,11 @@ export default function Leave() {
 
   return (
     <div className="p-8 bg-white rounded-2xl shadow-xl">
-      <h1 className="font-semibold text-xl">
-        Leave Management
-      </h1>
+      <h1 className="font-semibold text-xl mb-6">Leave Management</h1>
 
+      {/* Top Filters with Asset-style Search Box */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
-        <div className="w-full lg:w-1/3">
+        <div className="flex-1 flex justify-end items-center gap-3 w-full lg:w-auto">
           <input
             type="text"
             value={search}
@@ -161,44 +160,30 @@ export default function Leave() {
               setCurrentPage(1);
             }}
             placeholder="Search by Employee ID or Name..."
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-0 text-base"
+            className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-0"
           />
-        </div>
-
-        <div className="flex items-center gap-3 w-full lg:w-auto">
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="px-3 py-2 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-0 text-sm"
+            className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-0"
           >
             <option value="All">All Permissions</option>
             <option value="Approved">Approved</option>
             <option value="Denied">Denied</option>
           </select>
-
           <button
             onClick={() => openFormForNew()}
-            className="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm"
+            className="px-6 py-2 bg-purple-500 text-white rounded-lg shadow hover:scale-105 transition"
           >
             Add Leave
-          </button>
-          <button
-            onClick={() => {
-              setRecords([]);
-              setCurrentPage(1);
-              message.success("All leave records cleared");
-            }}
-            className="px-4 py-2 bg-white text-black rounded-lg text-sm hover:bg-gray-100 border"
-          >
-            Clear
           </button>
         </div>
       </div>
 
-
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1000px] border-collapse border border-gray-100 text-base">
           <thead>
@@ -253,111 +238,40 @@ export default function Leave() {
         </table>
       </div>
 
+      {/* Pagination */}
       <div className="flex items-center justify-between mt-6">
         <div className="text-sm text-gray-600">
           Showing {filteredRecords.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, filteredRecords.length)} of {filteredRecords.length}
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="px-4 py-2 border rounded disabled:opacity-50" disabled={currentPage === 1}>
-            Prev
-          </button>
+          <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="px-4 py-2 border rounded disabled:opacity-50" disabled={currentPage === 1}>Prev</button>
           <div className="px-4 py-2 border rounded">{currentPage} / {totalPages}</div>
-          <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} className="px-4 py-2 border rounded disabled:opacity-50" disabled={currentPage === totalPages}>
-            Next
-          </button>
+          <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} className="px-4 py-2 border rounded disabled:opacity-50" disabled={currentPage === totalPages}>Next</button>
         </div>
       </div>
 
-
+      {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-start lg:items-center justify-center z-50 overflow-auto py-10">
           <div className="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-auto">
             <h2 className="text-xl font-bold mb-4">{editIndex !== null ? "Edit Leave" : "Add Leave"}</h2>
 
             <div className="grid grid-cols-1 gap-4">
-              <Input
-                placeholder="Employee ID *"
-                value={formData.employeeId}
-                onChange={(e) => handleFormChange("employeeId", e.target.value)}
-                size="large"
-                className="focus:outline-none focus:ring-0"
-              />
-              <Input
-                placeholder="Employee Name *"
-                value={formData.employeeName}
-                onChange={(e) => handleFormChange("employeeName", e.target.value)}
-                size="large"
-                className="focus:outline-none focus:ring-0"
-              />
-
-              <Select
-                value={formData.leaveType}
-                placeholder="Select Leave *"
-                onChange={(value) => handleFormChange("leaveType", value)}
-                options={[
-                  { label: "Casual Leave", value: "Casual Leave" },
-                  { label: "Sick Leave", value: "Sick Leave" },
-                  { label: "Leave", value: "Leave" },
-                ]}
-                size="large"
-                className="w-full"
-              />
-
+              <Input placeholder="Employee ID *" value={formData.employeeId} onChange={(e) => handleFormChange("employeeId", e.target.value)} size="large" className="focus:outline-none focus:ring-0"/>
+              <Input placeholder="Employee Name *" value={formData.employeeName} onChange={(e) => handleFormChange("employeeName", e.target.value)} size="large" className="focus:outline-none focus:ring-0"/>
+              <Select value={formData.leaveType} placeholder="Select Leave *" onChange={(value) => handleFormChange("leaveType", value)} options={[{ label: "Casual Leave", value: "Casual Leave" },{ label: "Sick Leave", value: "Sick Leave" },{ label: "Leave", value: "Leave" }]} size="large" className="w-full"/>
               <div className="grid grid-cols-2 gap-3">
-                <DatePicker
-                  placeholder="From Date *"
-                  value={formData.fromDate ? dayjs(formData.fromDate) : null}
-                  format="DD/MM/YYYY"
-                  onChange={(date) => handleFormChange("fromDate", date)}
-                  className="w-full"
-                />
-                <DatePicker
-                  placeholder="To Date *"
-                  value={formData.toDate ? dayjs(formData.toDate) : null}
-                  format="DD/MM/YYYY"
-                  onChange={(date) => handleFormChange("toDate", date)}
-                  className="w-full"
-                />
+                <DatePicker placeholder="From Date *" value={formData.fromDate ? dayjs(formData.fromDate) : null} format="DD/MM/YYYY" onChange={(date) => handleFormChange("fromDate", date)} className="w-full"/>
+                <DatePicker placeholder="To Date *" value={formData.toDate ? dayjs(formData.toDate) : null} format="DD/MM/YYYY" onChange={(date) => handleFormChange("toDate", date)} className="w-full"/>
               </div>
-
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-500 mb-1">From Time (optional)</label>
-                  <TimePicker
-                    placeholder="From Time"
-                    value={formData.fromTime ? dayjs(formData.fromTime, "HH:mm") : null}
-                    format="HH:mm"
-                    onChange={(time) => handleFormChange("fromTime", time)}
-                    className="w-full"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm text-gray-500 mb-1">To Time (optional)</label>
-                  <TimePicker
-                    placeholder="To Time"
-                    value={formData.toTime ? dayjs(formData.toTime, "HH:mm") : null}
-                    format="HH:mm"
-                    onChange={(time) => handleFormChange("toTime", time)}
-                    className="w-full"
-                  />
-                </div>
+                <TimePicker placeholder="From Time" value={formData.fromTime ? dayjs(formData.fromTime, "HH:mm") : null} format="HH:mm" onChange={(time) => handleFormChange("fromTime", time)} className="w-full"/>
+                <TimePicker placeholder="To Time" value={formData.toTime ? dayjs(formData.toTime, "HH:mm") : null} format="HH:mm" onChange={(time) => handleFormChange("toTime", time)} className="w-full"/>
               </div>
-
-              <Select
-                value={formData.permission}
-                placeholder="Permission *"
-                onChange={(value) => handleFormChange("permission", value)}
-                options={[
-                  { label: "Approved", value: "Approved" },
-                  { label: "Denied", value: "Denied" },
-                ]}
-                size="large"
-                className="w-full"
-              />
+              <Select value={formData.permission} placeholder="Permission *" onChange={(value) => handleFormChange("permission", value)} options={[{ label: "Approved", value: "Approved" },{ label: "Denied", value: "Denied" }]} size="large" className="w-full"/>
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
-              <Button onClick={handleFormClear}>Clear</Button>
               <Button type="primary" onClick={handleFormSubmit}>Submit</Button>
               <Button onClick={() => { setModalOpen(false); setEditIndex(null); }}>Cancel</Button>
             </div>

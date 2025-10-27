@@ -1,13 +1,27 @@
-import React, { useState } from "react";
-import { Modal, Form, Input, DatePicker, Select, Button, Popconfirm, TimePicker } from "antd";
+import React, { useState, useEffect } from "react";
+import { Modal, Form, Input, DatePicker, Select, Popconfirm, TimePicker, message } from "antd";
 import { FaTrash, FaPencilAlt } from "react-icons/fa";
 import dayjs from "dayjs";
+import attendanceService from "../Attendance/service/AttenOd";
 
 export default function AttenOd() {
   const [odRecords, setOdRecords] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    fetchOdRecords();
+  }, []);
+
+  const fetchOdRecords = async () => {
+    try {
+      const data = await attendanceService.getOdRecords();
+      setOdRecords(data);
+    } catch {
+      message.error("Failed to fetch OD records");
+    }
+  };
 
   const showModal = (record = null) => {
     setEditingRecord(record);
@@ -21,6 +35,7 @@ export default function AttenOd() {
       });
     } else {
       form.resetFields();
+      form.setFieldsValue({ status: "Pending" });
     }
   };
 
@@ -31,12 +46,12 @@ export default function AttenOd() {
   };
 
   const calculateTotalHours = (start, end) => {
-    let diff = end.diff(start, "minute"); // in minutes
-    if (diff < 0) diff += 24 * 60; // Handle next day
-    return (diff / 60).toFixed(2); // Decimal format
+    let diff = end.diff(start, "minute");
+    if (diff < 0) diff += 24 * 60;
+    return (diff / 60).toFixed(2);
   };
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     const startTime = values.startTime;
     const endTime = values.endTime;
     const totalHours = calculateTotalHours(startTime, endTime);
@@ -49,33 +64,44 @@ export default function AttenOd() {
       totalHours,
     };
 
-    if (editingRecord) {
-      setOdRecords(
-        odRecords.map((r) =>
-          r.employeeId === editingRecord.employeeId ? record : r
-        )
-      );
-    } else {
-      setOdRecords([...odRecords, record]);
+    try {
+      if (editingRecord) {
+        await updateOdRecord(editingRecord.employeeId, record);
+        setOdRecords(odRecords.map((r) => (r.employeeId === editingRecord.employeeId ? record : r)));
+        message.success("OD record updated successfully");
+      } else {
+        await addOdRecord(record);
+        setOdRecords([...odRecords, record]);
+        message.success("OD record added successfully");
+      }
+    } catch {
+      message.error("Failed to save OD record");
     }
 
     handleCancel();
   };
 
-  const handleDelete = (employeeId) => {
-    setOdRecords(odRecords.filter((r) => r.employeeId !== employeeId));
+  const handleDelete = async (employeeId) => {
+    try {
+      await deleteOdRecord(employeeId);
+      setOdRecords(odRecords.filter((r) => r.employeeId !== employeeId));
+      message.success("OD record deleted successfully");
+    } catch {
+      message.error("Failed to delete OD record");
+    }
   };
 
   return (
     <div className="p-8 bg-white rounded-2xl shadow-xl">
-      <h1 className="font-semibold text-xl">
-        On Duty Management
-      </h1>
+      <h1 className="font-semibold text-xl">On Duty Management</h1>
 
       <div className="mb-4 flex justify-end">
-        <Button type="primary" onClick={() => showModal()}>
+        <button
+          onClick={() => showModal()}
+          className="px-6 py-2 bg-purple-500 text-white font-semibold rounded-lg shadow hover:scale-105 transition transform"
+        >
           Add OD
-        </Button>
+        </button>
       </div>
 
       <div className="overflow-x-auto">
@@ -108,20 +134,29 @@ export default function AttenOd() {
                   <td className="border border-gray-200 p-3 text-center">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        r.status === "Approved"
-                          ? "bg-green-100 text-green-700"
-                          : r.status === "Rejected"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
+                        r.status === "Approved" ? "bg-green-100 text-green-700" :
+                        r.status === "Rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
                       {r.status}
                     </span>
                   </td>
                   <td className="border border-gray-200 p-3 text-center space-x-2">
-                    <Button type="default" size="small" icon={<FaPencilAlt />} onClick={() => showModal(r)} />
-                    <Popconfirm title="Are you sure to delete this record?" onConfirm={() => handleDelete(r.employeeId)} okText="Yes" cancelText="No">
-                      <Button type="default" size="small" danger icon={<FaTrash />} />
+                    <button
+                      className="px-3 py-1 bg-gray-100 rounded shadow hover:bg-gray-200 transition"
+                      onClick={() => showModal(r)}
+                    >
+                      <FaPencilAlt />
+                    </button>
+                    <Popconfirm
+                      title="Are you sure to delete this record?"
+                      onConfirm={() => handleDelete(r.employeeId)}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <button className="px-3 py-1 bg-red-500 text-white rounded shadow hover:bg-red-600 transition">
+                        <FaTrash />
+                      </button>
                     </Popconfirm>
                   </td>
                 </tr>
@@ -137,35 +172,29 @@ export default function AttenOd() {
         </table>
       </div>
 
-
-      <Modal
-        title={editingRecord ? "Edit OD Record" : "Add OD Record"}
-        open={isModalOpen}
-        onCancel={handleCancel}
-        footer={null}
-      >
+      <Modal title={editingRecord ? "Edit OD Record" : "Add OD Record"} open={isModalOpen} onCancel={handleCancel} footer={null}>
         <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ status: "Pending" }}>
-          <Form.Item label="Employee ID" name="employeeId" rules={[{ required: true, message: "Please enter Employee ID" }]}>
+          <Form.Item label="Employee ID" name="employeeId" rules={[{ required: true }]}>
             <Input placeholder="Enter Employee ID" disabled={!!editingRecord} />
           </Form.Item>
 
-          <Form.Item label="Employee Name" name="employeeName" rules={[{ required: true, message: "Please enter Employee Name" }]}>
+          <Form.Item label="Employee Name" name="employeeName" rules={[{ required: true }]}>
             <Input placeholder="Enter Employee Name" />
           </Form.Item>
 
-          <Form.Item label="OD Date" name="odDate" rules={[{ required: true, message: "Please select OD Date" }]}>
+          <Form.Item label="OD Date" name="odDate" rules={[{ required: true }]}>
             <DatePicker format="DD/MM/YYYY" className="w-full" />
           </Form.Item>
 
-          <Form.Item label="Start Time" name="startTime" rules={[{ required: true, message: "Please select Start Time" }]}>
+          <Form.Item label="Start Time" name="startTime" rules={[{ required: true }]}>
             <TimePicker format="hh:mm A" use12Hours className="w-full" />
           </Form.Item>
 
-          <Form.Item label="End Time" name="endTime" rules={[{ required: true, message: "Please select End Time" }]}>
+          <Form.Item label="End Time" name="endTime" rules={[{ required: true }]}>
             <TimePicker format="hh:mm A" use12Hours className="w-full" />
           </Form.Item>
 
-          <Form.Item label="Reason" name="reason" rules={[{ required: true, message: "Please enter reason" }]}>
+          <Form.Item label="Reason" name="reason" rules={[{ required: true }]}>
             <Input placeholder="Enter Reason for OD" />
           </Form.Item>
 
@@ -178,9 +207,12 @@ export default function AttenOd() {
           </Form.Item>
 
           <Form.Item className="text-right">
-            <Button type="primary" htmlType="submit">
+            <button
+              type="submit"
+              className="px-6 py-2 bg-purple-500 text-white font-semibold rounded-lg shadow hover:scale-105 transition transform"
+            >
               {editingRecord ? "Update OD" : "Add OD"}
-            </Button>
+            </button>
           </Form.Item>
         </Form>
       </Modal>

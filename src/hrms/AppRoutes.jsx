@@ -74,10 +74,10 @@ export const hrmsMenuItems = [
        label: "Attendance",
       },
       { key: "/hrms/pages/AttenOt",
-       label: "Over time",
+       label: "Over Time",
       },
       { key: "/hrms/pages/AttenOd",
-        label: "On duty",
+        label: "On Duty",
       },
       { key: "/hrms/pages/StaffRecord",
         label: "Staff Record",
@@ -97,7 +97,7 @@ export const hrmsMenuItems = [
   {
     icon: <FileDoneOutlined />,
     key: "/hrms/pages/PayRoll",
-    label: "PayRoll",
+    label: "Payroll",
   },
 
 ];
@@ -122,7 +122,7 @@ const HRMSRoutes = () => {
       <Route path="pages/asset" element={< Asset/>} />
       {/* <Route path="pages/company" element={<Company/>} /> */}
       <Route path="pages/payroll" element={<Payroll/>}/>
-        <Route path="pages/AttendanceMaster" element={<AttendanceMaster/>}/>
+      <Route path="pages/AttendanceMaster" element={<AttendanceMaster/>}/>
       <Route path="pages/AttenOt" element={<AttenOt/>}/>
       <Route path="pages/AttenOd" element={<AttenOd/>}/>
       <Route path="pages/StaffRecord" element={<StaffRecord/>}/>

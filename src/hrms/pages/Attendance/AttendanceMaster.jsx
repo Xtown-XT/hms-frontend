@@ -1,9 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { FaPencilAlt } from "react-icons/fa";
-import { Input, Select, Button, DatePicker, message, Spin } from "antd";
+import { DatePicker, message, Spin } from "antd";
 import dayjs from "dayjs";
 import attendanceService from "../Attendance/service/Attendance";
-
 
 export default function AttendanceTable() {
   const [records, setRecords] = useState([]);
@@ -17,15 +16,16 @@ export default function AttendanceTable() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [formData, setFormData] = useState({
-    employeeId: "",
-    employeeName: "",
-    date: dayjs(),
+    emp_id: null,
+    emp_name: "",
+    time_in: 0,
+    time_out: 0,
     status: "Present",
+    overtime_hours: 0,
   });
 
   const [detailModal, setDetailModal] = useState({ open: false, title: "", present: [], absent: [] });
   const [employeeDetailModal, setEmployeeDetailModal] = useState({ open: false, employee: null });
-
 
   const fetchRecords = async () => {
     try {
@@ -38,7 +38,7 @@ export default function AttendanceTable() {
         limit: rowsPerPage,
       };
       const response = await attendanceService.getAll(params);
-      setRecords(response.data || [])
+      setRecords(response.data.attandance || []);
       console.log("Fetched records:", response.data);
     } catch (err) {
       console.error(err);
@@ -179,22 +179,23 @@ export default function AttendanceTable() {
 
   return (
     <div className="p-8 bg-white rounded-2xl shadow-xl">
-      <h1 className="font-semibold text-xl">Attendace Records</h1>
+      <h1 className="font-semibold text-xl mb-6">Attendance Records</h1>
+
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
-        <div className="w-full lg:w-1/3">
-          <Input
+        <div className="flex-1 flex justify-end items-center gap-3 w-full lg:w-auto">
+       
+          <input
+            type="text"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Search by Employee ID or Name..."
-            size="large"
+            placeholder="Search by ID or Name..."
+            className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-0"
           />
-        </div>
 
-        <div className="flex items-center gap-3 w-full lg:w-auto">
           <input
             type="date"
             value={selectedDate}
@@ -202,30 +203,33 @@ export default function AttendanceTable() {
               setSelectedDate(e.target.value);
               setCurrentPage(1);
             }}
-            className={`px-3 py-2 border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-0 text-sm ${
-              !selectedDate ? "text-gray-400" : "text-black"
-            }`}
+            className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-0"
           />
-          <Select
+
+          <select
             value={statusFilter}
-            onChange={(val) => {
-              setStatusFilter(val);
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            options={[
-              { label: "All", value: "All" },
-              { label: "Present", value: "Present" },
-              { label: "Absent", value: "Absent" },
-              { label: "Late", value: "Late" },
-            ]}
-            className="w-32"
-          />
-          <Button type="primary" onClick={handleUpdateToday}>
+            className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-0"
+          >
+            <option value="All">All</option>
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
+            <option value="Late">Late</option>
+          </select>
+
+          <button
+            onClick={handleUpdateToday}
+            className="px-6 py-2 bg-purple-500 text-white rounded-lg shadow hover:scale-105 transition"
+          >
             Update
-          </Button>
+          </button>
         </div>
       </div>
 
+      {/* Table */}
       {loading ? (
         <div className="flex justify-center p-8">
           <Spin size="large" />
@@ -311,42 +315,50 @@ export default function AttendanceTable() {
         </div>
       )}
 
-
+      {/* Pagination */}
       <div className="flex items-center justify-between mt-6">
         <div className="text-sm text-gray-600">
-          Showing {filteredRecords.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, filteredRecords.length)} of{" "}
-          {filteredRecords.length}
+          Showing {filteredRecords.length === 0 ? 0 : startIndex + 1} -{" "}
+          {Math.min(startIndex + rowsPerPage, filteredRecords.length)} of {filteredRecords.length}
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
             Prev
-          </Button>
-          <div className="px-4 py-2 border rounded">
-            {currentPage} / {totalPages}
-          </div>
-          <Button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+          </button>
+          <div className="px-4 py-1 border rounded">{currentPage} / {totalPages}</div>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
             Next
-          </Button>
+          </button>
         </div>
       </div>
 
-
+      {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl">
             <h2 className="text-xl font-bold mb-4">{editIndex !== null ? "Edit Attendance" : "Add Attendance"}</h2>
             <div className="grid grid-cols-1 gap-4">
-              <Input
+              <input
+                type="text"
                 placeholder="Employee ID"
                 value={formData.employeeId}
                 onChange={(e) => handleFormChange("employeeId", e.target.value)}
-                size="large"
+                className="px-3 py-2 border rounded focus:outline-none"
               />
-              <Input
+              <input
+                type="text"
                 placeholder="Employee Name"
                 value={formData.employeeName}
                 onChange={(e) => handleFormChange("employeeName", e.target.value)}
-                size="large"
+                className="px-3 py-2 border rounded focus:outline-none"
               />
               <DatePicker
                 value={formData.date ? dayjs(formData.date) : dayjs()}
@@ -355,35 +367,33 @@ export default function AttendanceTable() {
                 onChange={(date) => handleFormChange("date", date)}
                 size="large"
               />
-              <Select
+              <select
                 value={formData.status}
-                onChange={(value) => handleFormChange("status", value)}
-                options={[
-                  { label: "Present", value: "Present" },
-                  { label: "Absent", value: "Absent" },
-                  { label: "Late", value: "Late" },
-                ]}
-                size="large"
-              />
+                onChange={(e) => handleFormChange("status", e.target.value)}
+                className="px-3 py-2 border rounded focus:outline-none"
+              >
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="Late">Late</option>
+              </select>
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <Button type="primary" onClick={handleFormSubmit}>
+              <button onClick={handleFormSubmit} className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-500">
                 Save
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={() => {
                   setModalOpen(false);
                   setEditIndex(null);
                 }}
+                className="px-4 py-2 border rounded hover:bg-gray-100"
               >
                 Cancel
-              </Button>
+              </button>
             </div>
           </div>
         </div>
       )}
-
-
     </div>
   );
 }

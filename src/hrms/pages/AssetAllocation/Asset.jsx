@@ -89,7 +89,6 @@ export default function AssetMaster() {
       ...companyForm,
       assetType: finalAssetType,
       value: parseFloat(companyForm.value) || 0,
-      // employeeId and employeeName will remain undefined for now
     };
 
     if (editIndex !== null) {
@@ -151,7 +150,8 @@ export default function AssetMaster() {
       />
 
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mt-4 mb-6">
-        <h1 className="text-3xl font-extrabold bg-clip-text text-transparent bg-purple-500">
+        {/* Updated heading style */}
+        <h1 className="font-semibold text-xl mb-6">
           {activeTab === "company" ? "Company Assets" : "Employee Assets"}
         </h1>
 
@@ -403,4 +403,3 @@ export default function AssetMaster() {
     </div>
   );
 }
-
