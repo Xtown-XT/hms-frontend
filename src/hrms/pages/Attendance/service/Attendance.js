@@ -17,7 +17,7 @@ const attendanceService = {
 
   // Add a new attendance record
   create: (record) => {
-    return api.post("/createAttendance", record);
+    return api.post("attandance/createAttendance", record);
   },
 
   // Update an existing attendance record

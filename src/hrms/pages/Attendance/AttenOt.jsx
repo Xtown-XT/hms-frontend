@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   Form,
@@ -7,9 +7,11 @@ import {
   Select,
   message,
   Popconfirm,
+  Spin,
 } from "antd";
 import { FaPencilAlt, FaTrash } from "react-icons/fa";
 import dayjs from "dayjs";
+import AttenOtService from "../Attendance/service/AttenOt"; // ✅ your API service
 
 const { Option } = Select;
 
@@ -18,6 +20,9 @@ export default function AttenOt() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [otRecords, setOtRecords] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [loadingRecords, setLoadingRecords] = useState(false);
 
   const [departments] = useState([
     "Finance",
@@ -30,13 +35,41 @@ export default function AttenOt() {
     "Marketing",
   ]);
 
-  const [employees] = useState([
-    { id: "EMP001", name: "John Doe" },
-    { id: "EMP002", name: "Jane Smith" },
-    { id: "EMP003", name: "Robert Lee" },
-    { id: "EMP004", name: "Sophia Patel" },
-    { id: "EMP005", name: "Michael Brown" },
-  ]);
+  // ✅ Fetch Employees from API
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setLoadingEmployees(true);
+        const response = await fetch("/api/employees"); // Replace with real endpoint
+        if (!response.ok) throw new Error("Failed to load employees");
+        const data = await response.json();
+        setEmployees(data); // Expected format: [{ id: "EMP001", name: "John Doe" }]
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+        message.error("Failed to load employees");
+      } finally {
+        setLoadingEmployees(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
+
+  // ✅ Fetch OT records from API
+  useEffect(() => {
+    const fetchOtRecords = async () => {
+      try {
+        setLoadingRecords(true);
+        const res = await AttenOtService.getAll();
+        setOtRecords(res.data || []);
+      } catch (error) {
+        console.error("Error fetching OT records:", error);
+        message.error("Failed to fetch OT records");
+      } finally {
+        setLoadingRecords(false);
+      }
+    };
+    fetchOtRecords();
+  }, []);
 
   const showModal = (record = null) => {
     setEditingRecord(record);
@@ -66,71 +99,89 @@ export default function AttenOt() {
     return (diff / 60).toFixed(2);
   };
 
-  const handleSubmit = (values) => {
-    const startTime = values.startTime;
-    const endTime = values.endTime;
-    const otHours = calculateOtHours(startTime, endTime);
+  // ✅ Add or Update OT Record (API Connected)
+  const handleSubmit = async (values) => {
+    try {
+      const startTime = values.startTime;
+      const endTime = values.endTime;
+      const otHours = calculateOtHours(startTime, endTime);
 
-    const formattedRecord = {
-      ...values,
-      date: values.date.format("YYYY-MM-DD"),
-      startTime: startTime.format("HH:mm"),
-      endTime: endTime.format("HH:mm"),
-      otHours,
-    };
-
-    if (Array.isArray(values.employeeId) && values.employeeId.length > 1) {
-      const newRecords = values.employeeId.map((empId, index) => ({
-        key: `${empId}-${values.date}`,
-        employeeId: empId,
-        employeeName:
-          employees.find((e) => e.id === empId)?.name || values.employeeName[index],
-        department: values.department,
-        date: formattedRecord.date,
-        startTime: formattedRecord.startTime,
-        endTime: formattedRecord.endTime,
-        otHours: formattedRecord.otHours,
-        status: formattedRecord.status,
-      }));
-      setOtRecords([...otRecords, ...newRecords]);
-    } else {
-      const newRecord = {
-        key: editingRecord ? editingRecord.key : `${values.employeeId}-${values.date}`,
-        employeeId: Array.isArray(values.employeeId)
-          ? values.employeeId[0]
-          : values.employeeId,
-        employeeName: Array.isArray(values.employeeName)
-          ? values.employeeName[0]
-          : values.employeeName,
-        department: values.department,
-        date: formattedRecord.date,
-        startTime: formattedRecord.startTime,
-        endTime: formattedRecord.endTime,
-        otHours: formattedRecord.otHours,
-        status: formattedRecord.status,
+      const formattedRecord = {
+        ...values,
+        date: values.date.format("YYYY-MM-DD"),
+        startTime: startTime.format("HH:mm"),
+        endTime: endTime.format("HH:mm"),
+        otHours,
       };
 
-      if (editingRecord) {
-        setOtRecords(
-          otRecords.map((r) =>
-            r.key === editingRecord.key ? { ...r, ...newRecord } : r
-          )
-        );
-      } else {
-        setOtRecords([...otRecords, newRecord]);
-      }
-    }
+      if (Array.isArray(values.employeeId) && values.employeeId.length > 1) {
+        const newRecords = values.employeeId.map((empId, index) => ({
+          employeeId: empId,
+          employeeName:
+            employees.find((e) => e.id === empId)?.name ||
+            values.employeeName[index],
+          department: values.department,
+          date: formattedRecord.date,
+          startTime: formattedRecord.startTime,
+          endTime: formattedRecord.endTime,
+          otHours: formattedRecord.otHours,
+          status: formattedRecord.status,
+        }));
 
-    message.success(
-      editingRecord ? "OT Record updated successfully" : "OT Record added successfully"
-    );
-    handleCancel();
+        await AttenOtService.create(newRecords);
+        message.success("OT records added successfully");
+      } else {
+        const newRecord = {
+          employeeId: Array.isArray(values.employeeId)
+            ? values.employeeId[0]
+            : values.employeeId,
+          employeeName: Array.isArray(values.employeeName)
+            ? values.employeeName[0]
+            : values.employeeName,
+          department: values.department,
+          date: formattedRecord.date,
+          startTime: formattedRecord.startTime,
+          endTime: formattedRecord.endTime,
+          otHours: formattedRecord.otHours,
+          status: formattedRecord.status,
+        };
+
+        if (editingRecord) {
+          await AttenOtService.update(
+            editingRecord.employeeId,
+            editingRecord.date,
+            newRecord
+          );
+          message.success("OT record updated successfully");
+        } else {
+          await AttenOtService.create(newRecord);
+          message.success("OT record added successfully");
+        }
+      }
+
+      // Refresh records after submit
+      const res = await AttenOtService.getAll();
+      setOtRecords(res.data || []);
+
+      handleCancel();
+    } catch (error) {
+      console.error("Error submitting OT record:", error);
+      message.error("Failed to save OT record");
+    }
   };
 
-
-  const handleDelete = (key) => {
-    setOtRecords(otRecords.filter((r) => r.key !== key));
-    message.success("OT Record deleted successfully");
+  // ✅ Delete OT Record
+  const handleDelete = async (employeeId, date) => {
+    try {
+      await AttenOtService.delete(employeeId, date);
+      setOtRecords((prev) =>
+        prev.filter((r) => !(r.employeeId === employeeId && r.date === date))
+      );
+      message.success("OT record deleted successfully");
+    } catch (error) {
+      console.error("Error deleting OT record:", error);
+      message.error("Failed to delete OT record");
+    }
   };
 
   return (
@@ -147,85 +198,119 @@ export default function AttenOt() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[1100px] border-collapse border border-gray-100 text-base">
-          <thead>
-            <tr className="bg-gray-50 text-gray-600">
-              <th className="border border-gray-100 p-3 text-left">Employee ID</th>
-              <th className="border border-gray-100 p-3 text-left">Employee Name</th>
-              <th className="border border-gray-100 p-3 text-left">Department</th>
-              <th className="border border-gray-100 p-3 text-center">Date</th>
-              <th className="border border-gray-100 p-3 text-center">Start Time</th>
-              <th className="border border-gray-100 p-3 text-center">End Time</th>
-              <th className="border border-gray-100 p-3 text-center">OT Hours</th>
-              <th className="border border-gray-100 p-3 text-center">Status</th>
-              <th className="border border-gray-100 p-3 text-center">Action</th>
-            </tr>
-          </thead>
+        {loadingRecords ? (
+          <div className="text-center py-6">
+            <Spin size="large" />
+          </div>
+        ) : (
+          <table className="w-full min-w-[1100px] border-collapse border border-gray-100 text-base">
+            <thead>
+              <tr className="bg-gray-50 text-gray-600">
+                <th className="border border-gray-100 p-3 text-left">
+                  Employee ID
+                </th>
+                <th className="border border-gray-100 p-3 text-left">
+                  Employee Name
+                </th>
+                <th className="border border-gray-100 p-3 text-left">
+                  Department
+                </th>
+                <th className="border border-gray-100 p-3 text-center">Date</th>
+                <th className="border border-gray-100 p-3 text-center">
+                  Start Time
+                </th>
+                <th className="border border-gray-100 p-3 text-center">
+                  End Time
+                </th>
+                <th className="border border-gray-100 p-3 text-center">
+                  OT Hours
+                </th>
+                <th className="border border-gray-100 p-3 text-center">
+                  Status
+                </th>
+                <th className="border border-gray-100 p-3 text-center">
+                  Action
+                </th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {otRecords.length > 0 ? (
-              otRecords.map((r) => (
-                <tr
-                  key={r.key}
-                  className="hover:bg-gray-50 text-gray-700 transition duration-150"
-                >
-                  <td className="border border-gray-200 p-3 font-semibold text-[#408CFF]">
-                    {r.employeeId}
-                  </td>
-                  <td className="border border-gray-200 p-3">{r.employeeName}</td>
-                  <td className="border border-gray-200 p-3">{r.department}</td>
-                  <td className="border border-gray-200 p-3 text-center">
-                    {dayjs(r.date).format("DD-MM-YYYY")}
-                  </td>
-                  <td className="border border-gray-200 p-3 text-center">{r.startTime}</td>
-                  <td className="border border-gray-200 p-3 text-center">{r.endTime}</td>
-                  <td className="border border-gray-200 p-3 text-center font-bold">
-                    {r.otHours} Hrs
-                  </td>
-                  <td className="border border-gray-200 p-3 text-center">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        r.status === "Approved"
-                          ? "bg-green-100 text-green-700"
-                          : r.status === "Rejected"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {r.status}
-                    </span>
-                  </td>
-                  <td className="border border-gray-200 p-3 text-center space-x-2">
-                    <button
-                      className="px-3 py-1 bg-gray-100 rounded shadow hover:bg-gray-200 transition"
-                      onClick={() => showModal(r)}
-                    >
-                      <FaPencilAlt />
-                    </button>
-                    <Popconfirm
-                      title="Are you sure to delete this record?"
-                      onConfirm={() => handleDelete(r.key)}
-                      okText="Yes"
-                      cancelText="No"
-                    >
-                      <button className="px-3 py-1 bg-red-500 text-white rounded shadow hover:bg-red-600 transition">
-                        <FaTrash />
+            <tbody>
+              {otRecords.length > 0 ? (
+                otRecords.map((r) => (
+                  <tr
+                    key={`${r.employeeId}-${r.date}`}
+                    className="hover:bg-gray-50 text-gray-700 transition duration-150"
+                  >
+                    <td className="border border-gray-200 p-3 font-semibold text-[#408CFF]">
+                      {r.employeeId}
+                    </td>
+                    <td className="border border-gray-200 p-3">
+                      {r.employeeName}
+                    </td>
+                    <td className="border border-gray-200 p-3">
+                      {r.department}
+                    </td>
+                    <td className="border border-gray-200 p-3 text-center">
+                      {dayjs(r.date).format("DD-MM-YYYY")}
+                    </td>
+                    <td className="border border-gray-200 p-3 text-center">
+                      {r.startTime}
+                    </td>
+                    <td className="border border-gray-200 p-3 text-center">
+                      {r.endTime}
+                    </td>
+                    <td className="border border-gray-200 p-3 text-center font-bold">
+                      {r.otHours} Hrs
+                    </td>
+                    <td className="border border-gray-200 p-3 text-center">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          r.status === "Approved"
+                            ? "bg-green-100 text-green-700"
+                            : r.status === "Rejected"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {r.status}
+                      </span>
+                    </td>
+                    <td className="border border-gray-200 p-3 text-center space-x-2">
+                      <button
+                        className="px-3 py-1 bg-gray-100 rounded shadow hover:bg-gray-200 transition"
+                        onClick={() => showModal(r)}
+                      >
+                        <FaPencilAlt />
                       </button>
-                    </Popconfirm>
+                      <Popconfirm
+                        title="Are you sure to delete this record?"
+                        onConfirm={() => handleDelete(r.employeeId, r.date)}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <button className="px-3 py-1 bg-red-500 text-white rounded shadow hover:bg-red-600 transition">
+                          <FaTrash />
+                        </button>
+                      </Popconfirm>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="text-center text-gray-400 italic p-6"
+                  >
+                    No OT records available
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={9} className="text-center text-gray-400 italic p-6">
-                  No OT records available
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
+      {/* OT Modal */}
       <Modal
         title={editingRecord ? "Edit OT Record" : "Add OT Record"}
         open={isModalOpen}
@@ -239,7 +324,6 @@ export default function AttenOt() {
           onFinish={handleSubmit}
           initialValues={{ status: "Pending" }}
         >
-
           <Form.Item
             label="Employee ID"
             name="employeeId"
@@ -250,6 +334,9 @@ export default function AttenOt() {
               placeholder="Select Employee IDs"
               showSearch
               optionFilterProp="children"
+              notFoundContent={
+                loadingEmployees ? <Spin size="small" /> : "No employees"
+              }
             >
               {employees.map((emp) => (
                 <Option key={emp.id} value={emp.id}>
@@ -269,6 +356,9 @@ export default function AttenOt() {
               placeholder="Select Employee Names"
               showSearch
               optionFilterProp="children"
+              notFoundContent={
+                loadingEmployees ? <Spin size="small" /> : "No employees"
+              }
             >
               {employees.map((emp) => (
                 <Option key={emp.name} value={emp.name}>
@@ -296,11 +386,19 @@ export default function AttenOt() {
             <DatePicker className="w-full" />
           </Form.Item>
 
-          <Form.Item label="Start Time" name="startTime" rules={[{ required: true }]}>
+          <Form.Item
+            label="Start Time"
+            name="startTime"
+            rules={[{ required: true }]}
+          >
             <TimePicker format="HH:mm" className="w-full" />
           </Form.Item>
 
-          <Form.Item label="End Time" name="endTime" rules={[{ required: true }]}>
+          <Form.Item
+            label="End Time"
+            name="endTime"
+            rules={[{ required: true }]}
+          >
             <TimePicker format="HH:mm" className="w-full" />
           </Form.Item>
 
