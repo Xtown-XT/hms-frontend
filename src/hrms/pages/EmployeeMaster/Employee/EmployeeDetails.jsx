@@ -312,7 +312,7 @@ const Employee = () => {
 
   {/* heading */}
   <div>
-    <span className="font-semibold text-xl text-center sm:text-left">Un Registered Employees</span>
+    <span className="font-semibold text-xl text-center sm:text-left">Un-Registered Employees</span>
   </div>
 </div>
 

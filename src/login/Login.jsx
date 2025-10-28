@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import "./Login.css";
 import logo from "../components/assets/Company_logo.png";
@@ -7,11 +6,10 @@ import { FaEnvelope, FaEye, FaEyeSlash, FaPhone } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { message as antdMessage } from "antd";
 import Loading from "../utils/Loading";
-import { userService } from "../hrms/services/Userservice"; // ✅ API service import
+import { userService } from "../hrms/services/Userservice";
 
 const Login = () => {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [isMobileLogin, setIsMobileLogin] = useState(false);
@@ -23,11 +21,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
 
-  // 🧠 Validators
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidMobile = (mobile) => /^\d{10}$/.test(mobile);
 
-  // 🧩 Handle Login Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setEmailError("");
@@ -37,13 +33,12 @@ const Login = () => {
 
     let hasError = false;
 
-    // Validate Email / Mobile
     if (isMobileLogin) {
       if (!mobile.trim()) {
         setMobileError("Mobile number is required");
         hasError = true;
       } else if (!isValidMobile(mobile)) {
-        setMobileError("Please enter a valid 10-digit mobile number");
+        setMobileError("Enter valid 10-digit mobile number");
         hasError = true;
       }
     } else {
@@ -51,7 +46,7 @@ const Login = () => {
         setEmailError("Email is required");
         hasError = true;
       } else if (!isValidEmail(email)) {
-        setEmailError("Please enter a valid email address");
+        setEmailError("Enter valid email address");
         hasError = true;
       }
     }
@@ -66,60 +61,37 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // 👇 Actual API call
       const payload = isMobileLogin
         ? { mobile: mobile.trim(), password }
         : { identifier: email.trim(), password };
 
       const response = await userService.login(payload);
 
-      // ✅ Fix: check message instead of success flag
-      if (response.data?.message === "Login successful") {
-        antdMessage.success({
-          content: "Login successful!",
-          duration: 3,
-          style: { marginTop: "20px" },
-        });
+      if (response?.message === "Login successful") {
+        antdMessage.success("Login successful!");
 
-        // Save tokens
-        if (response.data.accessToken) {
-          localStorage.setItem("accessToken", response.data.accessToken);
-        }
-        if (response.data.refreshToken) {
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-        }
+        // ✅ Store tokens and user
+        localStorage.setItem("accessToken", response.accessToken || "");
+        localStorage.setItem("refreshToken", response.refreshToken || "");
+        localStorage.setItem("user", JSON.stringify(response.user || {}));
 
-        // Save user info
-        if (response.data.user) {
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-        }
-
-        console.log("✅ Login success:", response.data);
-        console.log("Navigating to /hrms/pages/dashboard");
-
-        // ✅ Navigate to HRMS dashboard
-        navigate("/hrms/pages/dashboard");
+        // ✅ Navigate to dashboard
+        navigate("/hrms/pages/dashboard", { replace: true });
       } else {
-        throw new Error(response.data?.message || "Invalid credentials!");
+        throw new Error(response?.message || "Invalid credentials!");
       }
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || error.message || "Login failed!";
       setLoginError(errorMessage);
-      antdMessage.error({
-        content: errorMessage,
-        duration: 5,
-        style: { marginTop: "20px" },
-      });
+      antdMessage.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // 👁️ Toggle password visibility
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-  // 🔄 Toggle Email / Mobile login
   const toggleLoginMode = () => {
     setIsMobileLogin(!isMobileLogin);
     setEmail("");
@@ -131,13 +103,11 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      {/* Left side */}
       <div className="login-left">
         <div className="welcome-container">
           <h3 className="welcome-heading">
             Welcome to &nbsp;
-            <img src={x_logo} alt="XTOWN" />
-            town..!
+            <img src={x_logo} alt="XTOWN" /> town..!
           </h3>
           <span className="welcome-tagline">
             We’re here to turn your ideas into reality.
@@ -145,27 +115,19 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right side */}
       <div className="login-right">
         <img src={logo} alt="Company Logo" className="logo" />
-
         <form className="login-form" onSubmit={handleSubmit}>
           <h3>LOGIN TO YOUR ACCOUNT</h3>
 
           {loginError && (
-            <div
-              className="login-error-message"
-              style={{ marginBottom: "1rem", textAlign: "center" }}
-            >
+            <div className="login-error-message global-error">
               {loginError}
             </div>
           )}
 
-          {/* Email or Mobile input */}
           <div
-            className={`form-group ${isMobileLogin ? "mobile" : "email"} ${
-              isMobileLogin ? mobileError : emailError ? "error" : ""
-            } mb-4`}
+            className={`form-group ${isMobileLogin ? "mobile" : "email"} mb-4`}
           >
             <div className="input-wrapper">
               {isMobileLogin ? (
@@ -213,7 +175,6 @@ const Login = () => {
             )}
           </div>
 
-          {/* Password */}
           <div
             className={`form-group password ${passwordError ? "error" : ""}`}
           >
@@ -246,12 +207,10 @@ const Login = () => {
             )}
           </div>
 
-          {/* Submit button */}
           <button type="submit" className="log-button" disabled={loading}>
             {loading ? <Loading /> : "LOGIN"}
           </button>
 
-          {/* Register link */}
           <div style={{ marginTop: "1rem", textAlign: "center" }}>
             <span>Don't have an account?</span>
             <span

@@ -1,57 +1,133 @@
+
+// import axios from "axios";
+
+// const api = axios.create({
+//   baseURL: "http://192.168.1.5:4001/hrms_api/v1/",
+//   headers: {
+//     "Content-Type": "application/json",
+//     //  "Content-Type": "multipart/form-data",
+//   },
+// });
+
+// // ✅ Request interceptor to attach token
+// api.interceptors.request.use(
+//   (config) => {
+//     const token = localStorage.getItem("token");
+//     if (token && token !== "undefined" && token !== "null") {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     } else {
+//       console.warn("⚠️ No valid token found in localStorage");
+//     }
+//     return config;
+//   },
+//   (error) => Promise.reject(error)
+// );
+
+// // ✅ Response interceptor for unauthorized
+// api.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response && error.response.status === 401) {
+//       console.error("❌ Unauthorized — token missing or invalid");
+//       // localStorage.removeItem("token");
+//       // window.location.href = "/login";
+//     }
+//     return Promise.reject(error);
+//   }
+// );
+
+// export default api;
+
+
+
+// src/hrms/services/api.js
+
+
+// import axios from "axios";
+
+// const BASE_URL = "http://192.168.1.5:4001/hrms_api/v1/";
+
+// // 🟢 JSON API
+// export const api = axios.create({
+//   baseURL: BASE_URL,
+//   headers: { "Content-Type": "application/json" },
+// });
+
+// // 🟠 FormData API
+// export const formApi = axios.create({
+//   baseURL: BASE_URL,
+//   headers: { "Content-Type": "multipart/form-data" },
+// });
+
+// // 🔐 Shared token interceptor
+// const attachToken = (config) => {
+//   const token = localStorage.getItem("token");
+//   if (token && token !== "undefined" && token !== "null") {
+//     config.headers.Authorization = `Bearer ${token}`;
+//   }
+//   return config;
+// };
+
+// api.interceptors.request.use(attachToken);
+// formApi.interceptors.request.use(attachToken);
+
+// // 🚫 Handle 401 globally
+// const handleUnauthorized = (error) => {
+//   if (error.response?.status === 401) {
+//     console.error("❌ Unauthorized — token missing or invalid");
+//     // localStorage.removeItem("token");
+//     // window.location.href = "/login";
+//   }
+//   return Promise.reject(error);
+// };
+
+// api.interceptors.response.use((res) => res, handleUnauthorized);
+// formApi.interceptors.response.use((res) => res, handleUnauthorized);
+
+// export default api;
+
+
+// src/hrms/services/api.js
+
+
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://192.168.1.7:4001/hrms_api/v1/",
-  timeout: 30000,
+  baseURL: "http://192.168.1.17:4001/hrms_api/v1/",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// // Request interceptor
-// Api.interceptors.request.use(
-//   (config) => {
+// ✅ Automatically attach accessToken for every request
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken"); // ✅ Must match your key in Application tab
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`; // ✅ Correct format for backend
+      console.log("✅ Token attached:", token);
+    } else {
+      console.warn("⚠️ No token found in localStorage");
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-//     const token =
-//       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZmlyc3RfbmFtZSI6Ilh0b3duIiwibGFzdF9uYW1lIjoiQWRtaW4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsIm1vYmlsZSI6Ijk4NzQ1NjMyMTAiLCJjb21wYW55X2lkIjpudWxsLCJicmFuY2hfaWQiOm51bGwsImRlcGFydG1lbnRfaWQiOm51bGwsImRpdmlzdGlvbl9pZCI6bnVsbCwicm9sZV9pZCI6MSwiaXNfYWN0aXZlIjp0cnVlLCJ0b2tlbiI6bnVsbCwidXNlcl9hZ2VudCI6bnVsbCwic3VibW9kdWwiOm51bGwsImNyZWF0ZWRfYnkiOjAsInVwZGF0ZWRfYnkiOjAsImNyZWF0ZWRfYXQiOiIyMDI1LTA2LTA1VDA4OjQzOjQwLjYyMloiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wNi0wNVQwODo0Mzo0MC42MjJaIiwiZGVsZXRlZF9hdCI6bnVsbCwiZGVsZXRlZF9ieSI6bnVsbCwiaWF0IjoxNzQ5MTIzNTUzLCJleHAiOjE3NDkxMjcxNTN9.dkkEqR_OPxIL6Q1CikGhV7644Lvr_6nARc2qiKSaOa8";
+// ✅ Handle unauthorized (401) globally
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.error("❌ Unauthorized — invalid or missing token");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      window.location.href = "/login"; // redirect to login
+    }
+    return Promise.reject(error);
+  }
+);
 
-//     // If token exists, add to headers
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
-
-// // Response interceptor
-// Api.interceptors.response.use(
-//   (response) => {
-//     // Handle success responses (2xx)
-//     return response;
-//   },
-//   (error) => {
-//     // Handle error responses
-//     // handleApiError(error);
-//     return Promise.reject(error);
-//   }
-// );
-
-// // API methods
-// export const authService = {
-//   login: (credentials) => Api.post("/auth/login", credentials),
-//   register: (userData) => Api.post("/auth/register", userData),
-//   logout: () => {
-//     localStorage.removeItem("token");
-//     localStorage.removeItem("user");
-//   },
-//   getCurrentUser: () => {
-//     const user = localStorage.getItem("user");
-//     return user ? JSON.parse(user) : null;
-//   },
-// };
 export default api;
+
 

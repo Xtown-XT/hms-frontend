@@ -171,15 +171,17 @@
 //           </Col>
 
 //           <Col xs={24} sm={8}>
-//             <Form.Item
-//               name="shift type"
-//               label="Shift Type"
-//               rules={[{ required: true, message: "Please select Shift Type" }]}
-//             >
-//               <Input placeholder="Select Shift Type">
-                
-//               </Input>
-//             </Form.Item>
+//            <Form.Item
+//   name="shiftType"
+//   label="Shift Type"
+//   rules={[{ required: true, message: "Please select a shift type" }]}
+// >
+//   <Select placeholder="Select Shift Type">
+//     <Select.Option value="day">Day Shift</Select.Option>
+//     <Select.Option value="night">Night Shift</Select.Option>
+//   </Select>
+// </Form.Item>
+
 //           </Col>
 //         </Row>
 

@@ -97,35 +97,57 @@ const Employeepersonal = () => {
         <div className="p-4 bg-gray-50">
             <Form form={form} layout="vertical">
                 {/* GRID: TWO CARDS PER ROW */}
+               <div className="w-full">
                  {/* Basic Details Section */}
-  <Card
-  bordered
-  title={<span className="font-semibold text-xl">Basic Details</span>}
->
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1"></div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-       <Form.Item name="employeeId" label="Employee ID" rules={[{ required: true }]}><Input /></Form.Item>
-                  <Form.Item name="attendanceId" label="Attendance ID"><Input /></Form.Item>
-                  <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}><Input /></Form.Item>
-                  <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}><Input /></Form.Item>
-                  <Form.Item name="dateOfJoining" label="Date of Joining"><DatePicker style={{ width: "100%" }} /></Form.Item>
-                  <Form.Item name="reportingManager" label="Reporting Manager"><Input /></Form.Item>
-                  <Form.Item name="employeeType" label="Employee Type">
-                    <Select placeholder="Select Type">
-                      <Option value="permanent">Permanent</Option>
-                      <Option value="contract">Contract</Option>
-                      <Option value="intern">Intern</Option>
-                    </Select>
-                  </Form.Item>
-                  <Form.Item name="status" label="Status">
-                    <Select placeholder="Select Status">
-                      <Option value="active">Active</Option>
-                      <Option value="inactive">Inactive</Option>
-                    </Select>
-                  </Form.Item>
-                  <Form.Item name="shiftType" label="Shift Type"><Input /></Form.Item>
+ <Card
+      bordered
+      title={<span className="font-semibold text-xl">Basic Details</span>}
+    >
+      <Form form={form} layout="vertical">
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-1 gap-y-1">
+          <Form.Item name="employeeId" label="Employee ID">
+  <Input disabled style={{ width: 220 }} />
+</Form.Item>
+<Form.Item name="attendanceId" label="Attendance ID">
+  <Input disabled style={{ width: 220 }} />
+</Form.Item>
+<Form.Item name="firstName" label="First Name">
+  <Input disabled style={{ width: 220 }} />
+</Form.Item>
+<Form.Item name="lastName" label="Last Name">
+  <Input disabled style={{ width: 220 }} />
+</Form.Item>
+<Form.Item name="dateOfJoining" label="Date of Joining">
+  <DatePicker style={{ width: 220 }} disabled />
+</Form.Item>
+<Form.Item name="reportingManager" label="Reporting Manager">
+  <Input disabled style={{ width: 220 }} />
+</Form.Item>
+<Form.Item name="employeeType" label="Employee Type">
+  <Select disabled style={{ width: 220 }}>
+    <Option value="permanent">Permanent</Option>
+    <Option value="contract">Contract</Option>
+    <Option value="intern">Intern</Option>
+  </Select>
+</Form.Item>
+<Form.Item name="status" label="Status">
+  <Select disabled style={{ width: 220 }}>
+    <Option value="active">Active</Option>
+    <Option value="inactive">Inactive</Option>
+  </Select>
+</Form.Item>
+<Form.Item name="shiftType" label="Shift Type">
+  <Select disabled style={{ width: 220 }}>
+    <Option value="day">Day Shift</Option>
+    <Option value="night">Night Shift</Option>
+  </Select>
+</Form.Item>
+
+        </div>
+      </Form>
+    </Card>
     </div>
-  </Card>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* PERSONAL INFORMATION */}
                  <Card
