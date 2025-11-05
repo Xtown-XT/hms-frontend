@@ -20,6 +20,8 @@ const AttenOt = {
    */
   getAll: () => api.get("/ot"),
 
+  getAllOt: () => api.get("/attendance/ot"),
+
   /**
    * 🔹 Fetch a single OT record by Employee ID and Date
    * @param {string} employeeId

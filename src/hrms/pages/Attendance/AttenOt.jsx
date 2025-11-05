@@ -35,15 +35,15 @@ export default function AttenOt() {
     "Marketing",
   ]);
 
-  // ✅ Fetch Employees from API
+  //  Fetch Employees from API
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         setLoadingEmployees(true);
-        const response = await fetch("/api/employees"); // Replace with real endpoint
+        const response = await fetch("/api/employees"); 
         if (!response.ok) throw new Error("Failed to load employees");
         const data = await response.json();
-        setEmployees(data); // Expected format: [{ id: "EMP001", name: "John Doe" }]
+        setEmployees(data); 
       } catch (error) {
         console.error("Error fetching employees:", error);
         message.error("Failed to load employees");
@@ -54,7 +54,6 @@ export default function AttenOt() {
     fetchEmployees();
   }, []);
 
-  // ✅ Fetch OT records from API
   useEffect(() => {
     const fetchOtRecords = async () => {
       try {
@@ -99,7 +98,7 @@ export default function AttenOt() {
     return (diff / 60).toFixed(2);
   };
 
-  // ✅ Add or Update OT Record (API Connected)
+  // Add or Update OT Record (API Connected)
   const handleSubmit = async (values) => {
     try {
       const startTime = values.startTime;
@@ -159,7 +158,6 @@ export default function AttenOt() {
         }
       }
 
-      // Refresh records after submit
       const res = await AttenOtService.getAll();
       setOtRecords(res.data || []);
 
@@ -170,7 +168,7 @@ export default function AttenOt() {
     }
   };
 
-  // ✅ Delete OT Record
+
   const handleDelete = async (employeeId, date) => {
     try {
       await AttenOtService.delete(employeeId, date);
@@ -310,7 +308,6 @@ export default function AttenOt() {
         )}
       </div>
 
-      {/* OT Modal */}
       <Modal
         title={editingRecord ? "Edit OT Record" : "Add OT Record"}
         open={isModalOpen}

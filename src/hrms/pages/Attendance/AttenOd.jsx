@@ -22,7 +22,7 @@ export default function AttenOd() {
       message.error("Failed to fetch OD records");
     }
   };
-
+  
   const showModal = (record = null) => {
     setEditingRecord(record);
     setIsModalOpen(true);

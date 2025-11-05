@@ -4,37 +4,22 @@ import api from "../../../services/api"; // Adjust the path as necessary
 
 
 // Attendance API methods
+// ✅ FIX: make sure spelling matches backend route
 const attendanceService = {
-  // Get all attendance records
-  getAll: (params = {}) => {
-    return api.get("/attandance/getAllAttendance", { params }); // your endpoint
-  },
+  getAll: (params = {}) => api.get("/attendance/getAllAttendance", { params }),
 
-  // Get a single attendance record by employeeId and date
-  getById: (employeeId, date) => {
-    return api.get(`/attandance/getAttendance/${employeeId}`, { params: { date } });
-  },
+  getById: (employeeId, date) =>
+    api.get(`/attendance/getAttendance/${employeeId}`, { params: { date } }),
 
-  // Add a new attendance record
-  create: (record) => {
-    return api.post("attandance/createAttendance", record);
-  },
+  create: (record) => api.post("/attendance/createAttendance", record),
 
-  // Update an existing attendance record
-  update: (employeeId, date, record) => {
-    return api.put(`/updateAttendance/${employeeId}`, { ...record, date });
-  },
+  update: (employeeId, date, record) =>
+    api.put(`/attendance/updateAttendance/${employeeId}`, { ...record, date }),
 
-  // Delete a single attendance record
-  delete: (employeeId, date) => {
-    return api.delete(`/deleteAttendance/${employeeId}`, { data: { date } });
-  },
+  delete: (employeeId, date) =>
+    api.delete(`/attendance/deleteAttendance/${employeeId}`, { data: { date } }),
 
-  // Delete all attendance records (use with caution)
-  deleteAll: () => {
-    return api.delete("/deleteAllAttendance");
-  },
+  deleteAll: () => api.delete("/attendance/deleteAllAttendance"),
 };
 
 export default attendanceService;
-

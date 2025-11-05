@@ -31,6 +31,9 @@ import AttenOd from "./pages/Attendance/AttenOd";
 import StaffRecord from "./pages/Attendance/StaffRecord"; 
 import EditRecord from "./pages/Attendance/EditRecord";
 import Leave from "./pages/Attendance/Leave";
+import EmployeeCalculation from "./pages/PayRoll/EmployeeCalculation";
+import AnnualPayroll from "./pages/PayRoll/AnnualPayroll.jsx";
+
 
 export const hrmsMenuItems = [
   {
@@ -98,7 +101,18 @@ export const hrmsMenuItems = [
     icon: <FileDoneOutlined />,
     key: "/hrms/pages/PayRoll",
     label: "Payroll",
-  },
+    children: [
+      { key: "/hrms/pages/payroll", 
+        label: "Pay Slip"
+      },
+      { key: "/hrms/pages/EmployeeCalculation",
+         label: "Employee Calculation"
+      },
+      { key: "/hrms/pages/AnnualPayroll", 
+        label: "Annual Payroll"
+      }
+    ]
+  }
 
 ];
 
@@ -128,6 +142,8 @@ const HRMSRoutes = () => {
       <Route path="pages/StaffRecord" element={<StaffRecord/>}/>
       <Route path="pages/EditRecord" element={<EditRecord/>}/>
       <Route path="pages/Leave" element={<Leave/>}/>
+      <Route path="pages/EmployeeCalculation" element={<EmployeeCalculation/>}/>
+      <Route path="pages/AnnualPayroll" element={<AnnualPayroll/>}/>
     </Routes>
   );
 };

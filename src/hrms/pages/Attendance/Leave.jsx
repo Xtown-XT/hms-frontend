@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { FaPencilAlt } from "react-icons/fa";
-import { Input, Select, Button, DatePicker, TimePicker, message } from "antd";
+import { Input, Select, Button, DatePicker, TimePicker, message, Space } from "antd";
 import dayjs from "dayjs";
+
+const { Search } = Input;
 
 const formatTimeForDisplay = (time) => {
   if (!time) return "--";
@@ -22,12 +24,12 @@ export default function Leave() {
   const [formData, setFormData] = useState({
     employeeId: "",
     employeeName: "",
-    leaveType: null, 
+    leaveType: null,
     fromDate: null,
     toDate: null,
     fromTime: null,
     toTime: null,
-    permission: null, 
+    permission: null,
   });
 
   const matchesSearch = (record, q) => {
@@ -132,58 +134,50 @@ export default function Leave() {
     setEditIndex(null);
   };
 
-  const handleFormClear = () => {
-    setFormData({
-      employeeId: "",
-      employeeName: "",
-      leaveType: null,
-      fromDate: null,
-      toDate: null,
-      fromTime: null,
-      toTime: null,
-      permission: null,
-    });
-  };
-
   return (
     <div className="p-8 bg-white rounded-2xl shadow-xl">
-      <h1 className="font-semibold text-xl mb-6">Leave Management</h1>
+      {/* ===== PAGE HEADER ===== */}
+      <div className="w-full flex flex-wrap items-start justify-between gap-4 mb-6">
+        <h1 className="font-semibold text-xl">Leave Management</h1>
 
-      {/* Top Filters with Asset-style Search Box */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
-        <div className="flex-1 flex justify-end items-center gap-3 w-full lg:w-auto">
-          <input
-            type="text"
+        {/* === Search + Filter + Add Leave === */}
+        <Space size="middle" className="flex flex-wrap justify-end">
+          <Search
+            placeholder="Search by Employee ID or Name..."
+            allowClear
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Search by Employee ID or Name..."
-            className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-0"
+            style={{ width: 250 }}
           />
-          <select
+
+          <Select
             value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
+            onChange={(value) => {
+              setStatusFilter(value);
               setCurrentPage(1);
             }}
-            className="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-0"
-          >
-            <option value="All">All Permissions</option>
-            <option value="Approved">Approved</option>
-            <option value="Denied">Denied</option>
-          </select>
-          <button
+            style={{ width: 180 }}
+            options={[
+              { label: "All Permissions", value: "All" },
+              { label: "Approved", value: "Approved" },
+              { label: "Denied", value: "Denied" },
+            ]}
+          />
+
+          <Button
+            type="primary"
             onClick={() => openFormForNew()}
-            className="px-6 py-2 bg-purple-500 text-white rounded-lg shadow hover:scale-105 transition"
+            className="bg-purple-500 text-white rounded-lg shadow-md"
           >
             Add Leave
-          </button>
-        </div>
+          </Button>
+        </Space>
       </div>
 
-      {/* Table */}
+      {/* ===== TABLE ===== */}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1000px] border-collapse border border-gray-100 text-base">
           <thead>
@@ -204,7 +198,10 @@ export default function Leave() {
               currentRecords.map((r, idx) => {
                 const recordIndex = startIndex + idx;
                 return (
-                  <tr key={`${r.employeeId}-${recordIndex}`} className="hover:bg-gray-50 text-gray-700 transition">
+                  <tr
+                    key={`${r.employeeId}-${recordIndex}`}
+                    className="hover:bg-gray-50 text-gray-700 transition"
+                  >
                     <td className="border border-gray-200 p-4 font-semibold text-[#408CFF] align-middle cursor-pointer underline">
                       {r.employeeId}
                     </td>
@@ -212,15 +209,29 @@ export default function Leave() {
                     <td className="border border-gray-200 p-4 text-center align-middle">{r.leaveType}</td>
                     <td className="border border-gray-200 p-4 text-center align-middle">{r.fromDate}</td>
                     <td className="border border-gray-200 p-4 text-center align-middle">{r.toDate}</td>
-                    <td className="border border-gray-200 p-4 text-center align-middle">{formatTimeForDisplay(r.fromTime)}</td>
-                    <td className="border border-gray-200 p-4 text-center align-middle">{formatTimeForDisplay(r.toTime)}</td>
                     <td className="border border-gray-200 p-4 text-center align-middle">
-                      <span className={`px-4 py-1 rounded-full text-sm font-bold ${r.permission === "Approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                      {formatTimeForDisplay(r.fromTime)}
+                    </td>
+                    <td className="border border-gray-200 p-4 text-center align-middle">
+                      {formatTimeForDisplay(r.toTime)}
+                    </td>
+                    <td className="border border-gray-200 p-4 text-center align-middle">
+                      <span
+                        className={`px-4 py-1 rounded-full text-sm font-bold ${
+                          r.permission === "Approved"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
                         {r.permission}
                       </span>
                     </td>
                     <td className="border border-gray-200 p-4 text-center align-middle">
-                      <button onClick={() => openFormForEdit(recordIndex)} className="p-3 bg-black text-white rounded hover:scale-105 transition" title="Edit">
+                      <button
+                        onClick={() => openFormForEdit(recordIndex)}
+                        className="p-3 bg-black text-white rounded hover:scale-105 transition"
+                        title="Edit"
+                      >
                         <FaPencilAlt />
                       </button>
                     </td>
@@ -238,42 +249,118 @@ export default function Leave() {
         </table>
       </div>
 
-      {/* Pagination */}
+
       <div className="flex items-center justify-between mt-6">
         <div className="text-sm text-gray-600">
-          Showing {filteredRecords.length === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, filteredRecords.length)} of {filteredRecords.length}
+          Showing {filteredRecords.length === 0 ? 0 : startIndex + 1} -{" "}
+          {Math.min(startIndex + rowsPerPage, filteredRecords.length)} of {filteredRecords.length}
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} className="px-4 py-2 border rounded disabled:opacity-50" disabled={currentPage === 1}>Prev</button>
-          <div className="px-4 py-2 border rounded">{currentPage} / {totalPages}</div>
-          <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} className="px-4 py-2 border rounded disabled:opacity-50" disabled={currentPage === totalPages}>Next</button>
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            className="px-4 py-2 border rounded disabled:opacity-50"
+            disabled={currentPage === 1}
+          >
+            Prev
+          </button>
+          <div className="px-4 py-2 border rounded">
+            {currentPage} / {totalPages}
+          </div>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            className="px-4 py-2 border rounded disabled:opacity-50"
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
         </div>
       </div>
 
-      {/* Modal */}
+
       {modalOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-start lg:items-center justify-center z-50 overflow-auto py-10">
           <div className="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-auto">
-            <h2 className="text-xl font-bold mb-4">{editIndex !== null ? "Edit Leave" : "Add Leave"}</h2>
+            <h2 className="text-xl font-bold mb-4">
+              {editIndex !== null ? "Edit Leave" : "Add Leave"}
+            </h2>
 
             <div className="grid grid-cols-1 gap-4">
-              <Input placeholder="Employee ID *" value={formData.employeeId} onChange={(e) => handleFormChange("employeeId", e.target.value)} size="large" className="focus:outline-none focus:ring-0"/>
-              <Input placeholder="Employee Name *" value={formData.employeeName} onChange={(e) => handleFormChange("employeeName", e.target.value)} size="large" className="focus:outline-none focus:ring-0"/>
-              <Select value={formData.leaveType} placeholder="Select Leave *" onChange={(value) => handleFormChange("leaveType", value)} options={[{ label: "Casual Leave", value: "Casual Leave" },{ label: "Sick Leave", value: "Sick Leave" },{ label: "Leave", value: "Leave" }]} size="large" className="w-full"/>
+              <Input
+                placeholder="Employee ID *"
+                value={formData.employeeId}
+                onChange={(e) => handleFormChange("employeeId", e.target.value)}
+                size="large"
+              />
+              <Input
+                placeholder="Employee Name *"
+                value={formData.employeeName}
+                onChange={(e) => handleFormChange("employeeName", e.target.value)}
+                size="large"
+              />
+              <Select
+                value={formData.leaveType}
+                placeholder="Select Leave *"
+                onChange={(value) => handleFormChange("leaveType", value)}
+                options={[
+                  { label: "Casual Leave", value: "Casual Leave" },
+                  { label: "Sick Leave", value: "Sick Leave" },
+                  { label: "Leave", value: "Leave" },
+                ]}
+                size="large"
+                className="w-full"
+              />
               <div className="grid grid-cols-2 gap-3">
-                <DatePicker placeholder="From Date *" value={formData.fromDate ? dayjs(formData.fromDate) : null} format="DD/MM/YYYY" onChange={(date) => handleFormChange("fromDate", date)} className="w-full"/>
-                <DatePicker placeholder="To Date *" value={formData.toDate ? dayjs(formData.toDate) : null} format="DD/MM/YYYY" onChange={(date) => handleFormChange("toDate", date)} className="w-full"/>
+                <DatePicker
+                  placeholder="From Date *"
+                  value={formData.fromDate ? dayjs(formData.fromDate) : null}
+                  format="DD/MM/YYYY"
+                  onChange={(date) => handleFormChange("fromDate", date)}
+                  className="w-full"
+                />
+                <DatePicker
+                  placeholder="To Date *"
+                  value={formData.toDate ? dayjs(formData.toDate) : null}
+                  format="DD/MM/YYYY"
+                  onChange={(date) => handleFormChange("toDate", date)}
+                  className="w-full"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <TimePicker placeholder="From Time" value={formData.fromTime ? dayjs(formData.fromTime, "HH:mm") : null} format="HH:mm" onChange={(time) => handleFormChange("fromTime", time)} className="w-full"/>
-                <TimePicker placeholder="To Time" value={formData.toTime ? dayjs(formData.toTime, "HH:mm") : null} format="HH:mm" onChange={(time) => handleFormChange("toTime", time)} className="w-full"/>
+                <TimePicker
+                  placeholder="From Time"
+                  value={formData.fromTime ? dayjs(formData.fromTime, "HH:mm") : null}
+                  format="HH:mm"
+                  onChange={(time) => handleFormChange("fromTime", time)}
+                  className="w-full"
+                />
+                <TimePicker
+                  placeholder="To Time"
+                  value={formData.toTime ? dayjs(formData.toTime, "HH:mm") : null}
+                  format="HH:mm"
+                  onChange={(time) => handleFormChange("toTime", time)}
+                  className="w-full"
+                />
               </div>
-              <Select value={formData.permission} placeholder="Permission *" onChange={(value) => handleFormChange("permission", value)} options={[{ label: "Approved", value: "Approved" },{ label: "Denied", value: "Denied" }]} size="large" className="w-full"/>
+              <Select
+                value={formData.permission}
+                placeholder="Permission *"
+                onChange={(value) => handleFormChange("permission", value)}
+                options={[
+                  { label: "Approved", value: "Approved" },
+                  { label: "Denied", value: "Denied" },
+                ]}
+                size="large"
+                className="w-full"
+              />
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
-              <Button type="primary" onClick={handleFormSubmit}>Submit</Button>
-              <Button onClick={() => { setModalOpen(false); setEditIndex(null); }}>Cancel</Button>
+              <Button type="primary" onClick={handleFormSubmit}>
+                Submit
+              </Button>
+              <Button onClick={() => { setModalOpen(false); setEditIndex(null); }}>
+                Cancel
+              </Button>
             </div>
           </div>
         </div>
